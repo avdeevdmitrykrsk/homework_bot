@@ -6,5 +6,9 @@ class EmptyHomeworksListError(Exception):
     pass
 
 
-class EmptyVariables(Exception):
+class EmptyVariablesError(Exception):
+    pass
+
+
+class NoKeyError(Exception):
     pass
