@@ -21,19 +21,25 @@ handler = StreamHandler(stream=sys.stdout)
 handler.setFormatter(logging.Formatter(format))
 logger.addHandler(handler)
 
-# Loading variables from environment
+# Loading variables from environment.
 load_dotenv()
 
-# Access variables
+# Access variables.
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
+# Number of "homework" in homeworks list.
 HOMEWORK_NUMBER = 0
-RETRY_PERIOD = 600
+
+# Connection settings.
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
+# Connection retry period in seconds.
+RETRY_PERIOD = 600
+
+# Expected values of "homework" status.
 HOMEWORK_VERDICTS = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
@@ -164,6 +170,8 @@ def main():
             if message not in sended_message:
                 send_message(bot, message)
                 sended_message = message
+            else:
+                logger.info('Данное сообщение уже было отправлено.')
             timestamp = homework.get('current_date', int(time.time()))
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
