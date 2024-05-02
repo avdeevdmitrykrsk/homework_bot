@@ -171,7 +171,11 @@ def main():
                 send_message(bot, message)
                 sended_message = message
             else:
-                logger.info('Данное сообщение уже было отправлено.')
+                logger.info(
+                    'Отмена отправки сообщения, данное сообщение '
+                    'уже было отправлено: \n'
+                    f'"{message}"'
+                )
             timestamp = homework.get('current_date', int(time.time()))
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
