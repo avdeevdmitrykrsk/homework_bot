@@ -29,7 +29,7 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-# Number of "homework" in homeworks list.
+# Number of "response" in homeworks list.
 HOMEWORK_NUMBER = 0
 
 # Connection settings.
@@ -39,7 +39,7 @@ HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 # Connection retry period in seconds.
 RETRY_PERIOD = 600
 
-# Expected values of "homework" status.
+# Expected values of "response" status.
 HOMEWORK_VERDICTS = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
@@ -69,17 +69,11 @@ def check_tokens():
 def send_message(bot, message):
     """Функция отправки сообщения в Telegram."""
     logger.info('Начата отправка сообщения пользователю')
-    try:
-        bot.send_message(
-            chat_id=TELEGRAM_CHAT_ID,
-            text=message
-        )
-        logger.debug('Сообщение пользователю успешно отправлено')
-    except ApiTelegramException:
-        logger.error(
-            'Ошибка при отправке сообщения пользователю. (main)',
-            exc_info=True
-        )
+    bot.send_message(
+        chat_id=TELEGRAM_CHAT_ID,
+        text=message
+    )
+    logger.debug('Сообщение пользователю успешно отправлено')
 
 
 def get_api_answer(timestamp):
@@ -127,16 +121,16 @@ def check_response(response):
     logger.info('Входящие данные проверены. Успех')
 
 
-def parse_status(homework):
+def parse_status(response):
     """Получаем нужную информацию из ответа."""
     logger.info('Попытка получения статуса домашки')
-    if 'status' not in homework:
+    if 'status' not in response:
         raise KeyError('Ключ "status" в домашке не обнаружен.')
-    if 'homework_name' not in homework:
+    if 'homework_name' not in response:
         raise KeyError('Ключ "homework_name" в домашке не обнаружен.')
 
-    homework_status = homework['status']
-    homework_name = homework['homework_name']
+    homework_status = response['status']
+    homework_name = response['homework_name']
 
     if homework_status not in HOMEWORK_VERDICTS:
         raise ValueError(
@@ -160,13 +154,14 @@ def main():
     timestamp = int(time.time())
     while True:
         try:
-            homework = get_api_answer(timestamp)
-            check_response(homework)
-            if not homework['homeworks']:
-                message = 'Список с домашками пуст.'
+            response = get_api_answer(timestamp)
+            check_response(response)
+            homework = response['homeworks']
+            if not homework:
+                logger.debug('Список с домашками пуст.')
+                continue
             else:
-                message = parse_status(homework['homeworks'][HOMEWORK_NUMBER])
-            logger.info(message)
+                message = parse_status(homework[HOMEWORK_NUMBER])
             if message not in sended_message:
                 send_message(bot, message)
                 sended_message = message
@@ -176,13 +171,24 @@ def main():
                     'уже было отправлено: \n'
                     f'"{message}"'
                 )
-            timestamp = homework.get('current_date', int(time.time()))
+            timestamp = response.get('current_date', int(time.time()))
+        except ApiTelegramException:
+            logger.error(
+                'Ошибка при отправке сообщения пользователю. (main)',
+                exc_info=True
+            )
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message, exc_info=True)
             if message not in sended_message:
-                send_message(bot, message)
-                sended_message = message
+                try:
+                    send_message(bot, message)
+                    sended_message = message
+                except ApiTelegramException:
+                    logger.error(
+                        'Ошибка при отправке сообщения пользователю. (main)',
+                        exc_info=True
+                    )
         finally:
             logger.info(
                 f'Ожидание следующего запроса -- {RETRY_PERIOD} секунд.'
