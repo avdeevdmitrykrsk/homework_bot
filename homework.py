@@ -160,8 +160,7 @@ def main():
             if not homework:
                 logger.debug('Список с домашками пуст.')
                 continue
-            else:
-                message = parse_status(homework[HOMEWORK_NUMBER])
+            message = parse_status(homework[HOMEWORK_NUMBER])
             if message not in sended_message:
                 send_message(bot, message)
                 sended_message = message
