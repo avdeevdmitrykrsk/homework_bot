@@ -28,6 +28,7 @@ load_dotenv()
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+RETRY_PERIOD = os.getenv('RETRY_PERIOD')
 
 # Number of "response" in homeworks list.
 HOMEWORK_NUMBER = 0
@@ -37,7 +38,6 @@ ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 # Connection retry period in seconds.
-RETRY_PERIOD = 600
 
 # Expected values of "response" status.
 HOMEWORK_VERDICTS = {
